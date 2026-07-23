@@ -1,4 +1,4 @@
-# اسکیمای دیتابیس — Seller Ops OS (MVP، PostgreSQL)
+# اسکیمای دیتابیس — همگام (Hamgam) | Seller Ops OS (MVP، PostgreSQL)
 
 ## ۱. ERD (مفهومی)
 

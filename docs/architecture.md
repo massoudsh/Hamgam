@@ -1,4 +1,4 @@
-# معماری فنی — Seller Ops OS (MVP)
+# معماری فنی — همگام (Hamgam) | Seller Ops OS (MVP)
 
 ## ۱. اصول طراحی
 - **Source of Truth واحد**: موجودی و SKU در دیتابیس داخلی سیستم master هستند؛ هر کانال یک "نمای" (view) از آن است، نه برعکس.
