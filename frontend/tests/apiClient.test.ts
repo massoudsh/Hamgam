@@ -1,0 +1,37 @@
+import { describe, it, expect, vi } from "vitest";
+import { ApiClient } from "@/lib/apiClient";
+import { demoKpis, demoOrders } from "@/lib/demoData";
+
+describe("ApiClient", () => {
+  it("falls back to demo KPIs when no baseUrl is configured", async () => {
+    const client = new ApiClient({ sellerId: "s1" });
+    const result = await client.getDashboardKpis();
+    expect(result.demo).toBe(true);
+    expect(result.data).toEqual(demoKpis);
+  });
+
+  it("falls back to demo data when the backend request fails", async () => {
+    const fetchImpl = vi.fn().mockRejectedValue(new Error("network down"));
+    const client = new ApiClient({ sellerId: "s1", baseUrl: "http://localhost:4000", fetchImpl });
+    const result = await client.getDashboardKpis();
+    expect(result.demo).toBe(true);
+    expect(result.data).toEqual(demoKpis);
+  });
+
+  it("uses live backend data when the request succeeds", async () => {
+    const liveKpis = { ordersLast30Days: 1, criticalStockSkuCount: 0, overslellingPreventedCount: 0 };
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => liveKpis });
+    const client = new ApiClient({ sellerId: "s1", baseUrl: "http://localhost:4000", fetchImpl });
+    const result = await client.getDashboardKpis();
+    expect(result.demo).toBe(false);
+    expect(result.data).toEqual(liveKpis);
+  });
+
+  it("filters demo orders by channel and status client-side", async () => {
+    const client = new ApiClient({ sellerId: "s1" });
+    const { data } = await client.getOrderHub({ channel: "basalam" });
+    expect(data.every((o) => o.channelCode === "basalam")).toBe(true);
+    expect(data.length).toBeGreaterThan(0);
+    expect(data.length).toBeLessThan(demoOrders.length);
+  });
+});

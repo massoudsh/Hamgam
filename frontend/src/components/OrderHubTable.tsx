@@ -1,0 +1,50 @@
+import type { OrderHubRow } from "@/lib/types";
+
+const STATUS_LABELS: Record<string, string> = {
+  new: "جدید",
+  processing: "در حال ارسال",
+  shipped: "ارسال‌شده",
+  delivered: "تحویل‌شده",
+  cancelled: "لغوشده"
+};
+
+interface OrderHubTableProps {
+  orders: OrderHubRow[];
+}
+
+export function OrderHubTable({ orders }: OrderHubTableProps) {
+  if (orders.length === 0) {
+    return <p className="order-hub-empty">سفارشی با این فیلترها یافت نشد.</p>;
+  }
+
+  return (
+    <table className="order-hub-table" aria-label="جدول سفارش‌ها">
+      <thead>
+        <tr>
+          <th>شناسه سفارش</th>
+          <th>کانال</th>
+          <th>مشتری</th>
+          <th>وضعیت</th>
+          <th>مبلغ</th>
+          <th>تاریخ ثبت</th>
+        </tr>
+      </thead>
+      <tbody>
+        {orders.map((order) => (
+          <tr key={order.id} data-testid="order-row">
+            <td>{order.externalOrderId}</td>
+            <td>{order.channelDisplayName}</td>
+            <td>{order.customerName ?? "—"}</td>
+            <td>
+              <span className={`status-badge status-${order.status}`}>
+                {STATUS_LABELS[order.status] ?? order.status}
+              </span>
+            </td>
+            <td>{order.totalAmount != null ? order.totalAmount.toLocaleString("fa-IR") : "—"}</td>
+            <td>{new Date(order.placedAt).toLocaleDateString("fa-IR")}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
