@@ -67,19 +67,33 @@ describe("channel sync engine", () => {
     expect(jobs[0].jobType).toBe("inventory_push");
   });
 
-  it("auto-disables the listing when stock reaches zero", async () => {
+  it("automatically pushes inventory and disables the listing when stock reaches zero", async () => {
     const seller = await db.query(`INSERT INTO seller (name, email) VALUES ('S', $1) RETURNING id`, [
       `s-${Math.random()}@test.dev`
     ]);
     const sellerId = seller.rows[0].id;
     const skuId = await createSku(db, { sellerId, internalCode: "SKU-2", canonicalTitle: "کالا", initialStock: 3 });
     const { channelListingId } = await seedListing(db, skuId);
+    const pushed: number[] = [];
 
-    await adjustInventory(db, { skuId, changeQty: -3, reason: "order", eventId: "evt-1" });
-    await syncInventoryToChannels(db, skuId, () => fakeConnector());
+    await adjustInventory(
+      db,
+      { skuId, changeQty: -3, reason: "order", eventId: "evt-1" },
+      {
+        sync: (changedSkuId) =>
+          syncInventoryToChannels(db, changedSkuId, () =>
+            fakeConnector({ pushInventoryUpdate: async (input) => void pushed.push(input.stock) })
+          )
+      }
+    );
 
+    expect(pushed).toEqual([0]);
     const listing = await db.query(`SELECT is_active FROM channel_listing WHERE id = $1`, [channelListingId]);
     expect(listing.rows[0].is_active).toBe(false);
+
+    const jobs = await listSyncJobs(db, sellerId);
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0].status).toBe("success");
   });
 
   it("records a failed sync_job and marks the connection as errored when the push throws", async () => {

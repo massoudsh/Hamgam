@@ -1,4 +1,6 @@
 import type { QueryExecutor } from "../db/pool.js";
+import { syncInventoryToChannels } from "./listingSync.js";
+import { createConnectorForChannel } from "../connectors/factory.js";
 
 export class InsufficientStockError extends Error {
   constructor(skuId: string) {
@@ -36,6 +38,12 @@ export interface InventorySnapshot {
   isOutOfStock: boolean;
 }
 
+export type InventorySyncHandler = (skuId: string) => Promise<unknown>;
+
+export interface AdjustInventoryOptions {
+  sync?: InventorySyncHandler;
+}
+
 /**
  * Adjusts inventory for a Master SKU using optimistic concurrency (`version` column)
  * and idempotency (`processed_event` table). Safe to call multiple times with the
@@ -46,8 +54,10 @@ export interface InventorySnapshot {
  */
 export async function adjustInventory(
   db: QueryExecutor,
-  input: AdjustInventoryInput
+  input: AdjustInventoryInput,
+  options: AdjustInventoryOptions = {}
 ): Promise<InventorySnapshot> {
+  const sync = options.sync ?? ((skuId: string) => syncInventoryToChannels(db, skuId, createConnectorForChannel));
   const maxRetries = input.maxRetries ?? 5;
   let attempt = 0;
   let lastError: unknown;
@@ -116,7 +126,9 @@ export async function adjustInventory(
       );
 
       await client.query("COMMIT");
-      return toSnapshot(updated.rows[0]);
+      const snapshot = toSnapshot(updated.rows[0]);
+      await sync(snapshot.skuId);
+      return snapshot;
     } catch (err) {
       await client.query("ROLLBACK").catch(() => {});
       if (err instanceof ConcurrencyConflictError) {
