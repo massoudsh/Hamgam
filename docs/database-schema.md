@@ -129,7 +129,7 @@ CREATE TABLE "order" (
     seller_id           UUID NOT NULL REFERENCES seller(id) ON DELETE CASCADE,
     channel_connection_id UUID NOT NULL REFERENCES channel_connection(id),
     external_order_id   VARCHAR(120) NOT NULL,        -- شناسه سفارش در کانال مبدأ (یا internal برای اینستاگرام دستی)
-    status               VARCHAR(30) NOT NULL DEFAULT 'new', -- new, processing, shipped, delivered, cancelled
+    status               VARCHAR(30) NOT NULL DEFAULT 'new', -- new, processing, shipped, delivered, returned, cancelled
     customer_name        VARCHAR(200),
     customer_phone       VARCHAR(20),
     total_amount         NUMERIC(14,2),
@@ -200,5 +200,5 @@ CREATE INDEX idx_sync_job_status ON sync_job(status) WHERE status IN ('pending',
 - **Master SKU vs Listing**: موجودی فقط روی `inventory.sku_id` نگه داشته می‌شود؛ `channel_listing.channel_stock` صرفاً «آخرین عدد گزارش‌شده توسط کانال» است و برای reconciliation استفاده می‌شود، نه به‌عنوان source of truth.
 - **Idempotency**: هر رویداد ورودی از کانال (webhook) قبل از پردازش در `processed_event` چک/ثبت می‌شود تا پردازش تکراری رخ ندهد.
 - **Optimistic locking**: به‌روزرسانی `inventory.quantity_on_hand` همیشه با شرط `WHERE version = :expected_version` انجام و `version` افزایش می‌یابد؛ در برخورد هم‌زمان، عملیات retry می‌شود.
-- **مرجوعی و بازگشت موجودی**: تأیید `return_item.restock = true` یک رکورد مثبت در `inventory_ledger` ایجاد و `inventory.quantity_on_hand` را افزایش می‌دهد که به‌صورت خودکار وارد چرخه Sync به همه کانال‌ها می‌شود.
+- **مرجوعی و بازگشت موجودی**: مرجوعی فقط برای سفارش `shipped` ثبت می‌شود و وضعیت سفارش را به `returned` تغییر می‌دهد. هر `return_item` با `restock = true` یک رکورد مثبت در `inventory_ledger` ایجاد و `inventory.quantity_on_hand` را افزایش می‌دهد که به‌صورت خودکار وارد چرخه Sync به همه کانال‌ها می‌شود.
 - **چندمستأجری (multi-tenant)**: تمام جداول اصلی از طریق `seller_id` (مستقیم یا از طریق FK زنجیره‌ای) ایزوله شده‌اند؛ در فاز production توصیه می‌شود Row-Level Security روی `seller_id` فعال شود.

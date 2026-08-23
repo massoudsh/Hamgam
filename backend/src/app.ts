@@ -7,6 +7,7 @@ import { dashboardRouter } from "./routes/dashboard.js";
 import { connectorsRouter } from "./routes/connectors.js";
 import { matchingRouter } from "./routes/matching.js";
 import { syncRouter } from "./routes/sync.js";
+import { returnsRouter } from "./routes/returns.js";
 
 export function createApp(db: QueryExecutor): Express {
   const app = express();
@@ -19,6 +20,7 @@ export function createApp(db: QueryExecutor): Express {
   app.use("/api", connectorsRouter(db));
   app.use("/api", matchingRouter(db));
   app.use("/api", syncRouter(db));
+  app.use("/api", returnsRouter(db));
 
   // Central error handler — keeps internals out of client-facing errors.
   app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
