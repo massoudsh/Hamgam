@@ -7,6 +7,7 @@
 ## اسناد پروژه
 - [PRD / مستند محصول MVP](docs/prd.md)
 - [معماری فنی](docs/architecture.md)
+- [معماری و جریان داده](ARCHITECTURE.md)
 - [اسکیمای دیتابیس](docs/database-schema.md)
 
 ## ساختار مخزن
@@ -35,13 +36,15 @@ npm run dev         # http://localhost:3000 — بدون بک‌اند هم در
 ## تست
 
 ```bash
-cd backend  && npm test && npm run typecheck   # ۳۰ تست: inventory idempotent/concurrency، orders، tenant isolation، کانکتورها، HTTP API
-cd frontend && npm test && npm run typecheck   # ۹ تست: KpiCards، OrderHubTable/Filters، ApiClient (demo fallback)
+cd backend  && npm ci && npm test && npm run typecheck && npm run build
+cd frontend && npm ci && npm test && npm run typecheck && npm run build
 ```
 
-تست‌های بک‌اند به PostgreSQL واقعی نیاز ندارند (از `pg-mem` برای اجرای SQL واقعی migration بدون سرور دیتابیس استفاده می‌شود). تست‌های فرانت‌اند با jsdom اجرا می‌شوند، نه مرورگر واقعی.
+تست‌های بک‌اند به PostgreSQL واقعی نیاز ندارند (از `pg-mem` برای اجرای SQL واقعی migration بدون سرور دیتابیس استفاده می‌شود). تست‌های فرانت‌اند با jsdom اجرا می‌شوند، نه مرورگر واقعی. همین بررسی‌ها برای push و pull request به شاخهٔ `main` در GitHub Actions نیز اجرا می‌شوند.
 
-> بیلد production سنگین (`next build`) طبق سیاست پلتفرم باید روی سرور استقرار (SSH) اجرا شود، نه داخل کانتینر توسعه.
+## ارزیابی امنیت و AI
+
+این MVP هنوز احراز هویت واقعی ندارد و `sellerId` از caller دریافت می‌شود؛ پیش از استقرار عمومی باید session/JWT، کنترل دسترسی، محافظت CSRF و رمزنگاری credentials کانال اضافه شود. matching فعلی قانون‌محور و قابل‌تأیید توسط فروشنده است و از مدل AI مولد یا دادهٔ آموزشی استفاده نمی‌کند؛ بنابراین دادهٔ کاربر برای آموزش مدل خارجی ارسال نمی‌شود. جزئیات تهدیدها و مرزهای اعتماد در [ARCHITECTURE.md](ARCHITECTURE.md) ثبت شده است.
 
 ## محدودیت‌ها و ریسک‌های باقی‌مانده
 - **Basalam connector**: مسیرهای REST بر پایه فرض مستند در `docs/architecture.md` هستند و با اکانت واقعی/Sandbox تأیید نشده‌اند (جزئیات در `backend/src/connectors/basalam.ts`).
