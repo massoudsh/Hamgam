@@ -18,6 +18,14 @@ export interface OrderHubRow {
   placedAt: string;
 }
 
+export interface SyncConnectionError {
+  channelConnectionId: string;
+  channelCode: string;
+  channelDisplayName: string;
+  lastError: string | null;
+  updatedAt: string;
+}
+
 export interface OrderHubFilters {
   channel?: string;
   status?: string;

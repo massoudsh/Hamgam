@@ -27,7 +27,19 @@ describe("ApiClient", () => {
     expect(result.data).toEqual(liveKpis);
   });
 
-  it("filters demo orders by channel and status client-side", async () => {
+  it("loads connection errors from the live backend", async () => {
+    const errors = [{ channelConnectionId: "c1", channelCode: "woocommerce", channelDisplayName: "ووکامرس", lastError: "timeout", updatedAt: "2026-10-12T00:00:00Z" }];
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ errors }) });
+    const client = new ApiClient({ sellerId: "s1", baseUrl: "http://localhost:4000", fetchImpl });
+    await expect(client.getSyncConnectionErrors()).resolves.toEqual({ data: errors, demo: false });
+  });
+
+  it("returns no connection errors in demo mode", async () => {
+    const client = new ApiClient({ sellerId: "s1" });
+    await expect(client.getSyncConnectionErrors()).resolves.toEqual({ data: [], demo: true });
+  });
+
+
     const client = new ApiClient({ sellerId: "s1" });
     const { data } = await client.getOrderHub({ channel: "basalam" });
     expect(data.every((o) => o.channelCode === "basalam")).toBe(true);

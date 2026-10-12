@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ApiClient } from "@/lib/apiClient";
-import type { DashboardKpis, OrderHubFilters as Filters, OrderHubRow } from "@/lib/types";
+import type { DashboardKpis, OrderHubFilters as Filters, OrderHubRow, SyncConnectionError } from "@/lib/types";
+import { SyncConnectionErrors } from "./SyncConnectionErrors";
 import { KpiCards } from "./KpiCards";
 import { OrderHubFilters } from "./OrderHubFilters";
 import { OrderHubTable } from "./OrderHubTable";
@@ -14,6 +15,7 @@ export function Dashboard() {
   const [filters, setFilters] = useState<Filters>({});
   const [kpis, setKpis] = useState<DashboardKpis | null>(null);
   const [orders, setOrders] = useState<OrderHubRow[]>([]);
+  const [connectionErrors, setConnectionErrors] = useState<SyncConnectionError[]>([]);
   const [isDemo, setIsDemo] = useState(client.isDemoMode);
   const [loading, setLoading] = useState(true);
 
@@ -29,6 +31,17 @@ export function Dashboard() {
     };
   }, [client]);
 
+  useEffect(() => {
+    let cancelled = false;
+    client.getSyncConnectionErrors().then(({ data, demo }) => {
+      if (cancelled) return;
+      setConnectionErrors(data);
+      setIsDemo((prev) => prev || demo);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client]);
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -79,6 +92,7 @@ export function Dashboard() {
 
         <section className="dashboard-content">
           {kpis && <KpiCards kpis={kpis} />}
+          <SyncConnectionErrors errors={connectionErrors} />
 
           <section className="order-hub" id="orders" aria-label="مرکز سفارش‌ها">
             <div className="section-heading">
