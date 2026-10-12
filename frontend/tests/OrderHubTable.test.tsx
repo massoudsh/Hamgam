@@ -24,6 +24,11 @@ describe("OrderHubTable", () => {
     expect(screen.getByText("جدید")).toBeInTheDocument();
   });
 
+  it("shows the returned status in Persian", () => {
+    render(<OrderHubTable orders={[{ ...rows[0], status: "returned" }]} />);
+    expect(screen.getByText("مرجوع‌شده")).toBeInTheDocument();
+  });
+
   it("shows an empty state when there are no orders", () => {
     render(<OrderHubTable orders={[]} />);
     expect(screen.getByText(/یافت نشد/)).toBeInTheDocument();

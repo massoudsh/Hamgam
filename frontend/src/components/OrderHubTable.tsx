@@ -5,6 +5,7 @@ const STATUS_LABELS: Record<string, string> = {
   processing: "در حال ارسال",
   shipped: "ارسال‌شده",
   delivered: "تحویل‌شده",
+  returned: "مرجوع‌شده",
   cancelled: "لغوشده"
 };
 
