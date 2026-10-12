@@ -40,7 +40,7 @@ cd backend  && npm ci && npm test && npm run typecheck && npm run build
 cd frontend && npm ci && npm test && npm run typecheck && npm run build
 ```
 
-تست‌های بک‌اند به PostgreSQL واقعی نیاز ندارند (از `pg-mem` برای اجرای SQL واقعی migration بدون سرور دیتابیس استفاده می‌شود). تست‌های فرانت‌اند با jsdom اجرا می‌شوند، نه مرورگر واقعی. همین بررسی‌ها برای push و pull request به شاخهٔ `main` در GitHub Actions نیز اجرا می‌شوند.
+تست‌های بک‌اند به PostgreSQL واقعی نیاز ندارند (از `pg-mem` برای اجرای SQL واقعی migration بدون سرور دیتابیس استفاده می‌شود). تست‌های فرانت‌اند با jsdom اجرا می‌شوند، نه مرورگر واقعی. همین بررسی‌ها برای push و pull request به شاخهٔ `main` در GitHub Actions نیز اجرا می‌شوند. CodeQL تحلیل ایستای JavaScript/TypeScript را روی همان رویدادها و هر هفته اجرا می‌کند؛ Dependabot نیز وابستگی‌های npm هر دو workspace را هفتگی بررسی می‌کند.
 
 ## ارزیابی امنیت و AI
 
