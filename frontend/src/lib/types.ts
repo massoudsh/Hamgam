@@ -18,6 +18,14 @@ export interface OrderHubRow {
   placedAt: string;
 }
 
+export interface CriticalStockItem {
+  skuId: string;
+  quantityOnHand: number;
+  lowStockThreshold: number;
+  internalCode: string;
+  canonicalTitle: string;
+}
+
 export interface SyncConnectionError {
   channelConnectionId: string;
   channelCode: string;

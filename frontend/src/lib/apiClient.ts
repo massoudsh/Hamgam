@@ -1,4 +1,4 @@
-import type { DashboardKpis, OrderHubFilters, OrderHubRow, SyncConnectionError } from "./types";
+import type { CriticalStockItem, DashboardKpis, OrderHubFilters, OrderHubRow, SyncConnectionError } from "./types";
 import { demoKpis, demoOrders } from "./demoData";
 
 export class ApiClientError extends Error {}
@@ -44,7 +44,19 @@ export class ApiClient {
     }
   }
 
-  async getSyncConnectionErrors(): Promise<{ data: SyncConnectionError[]; demo: boolean }> {
+  async getCriticalStock(): Promise<{ data: CriticalStockItem[]; demo: boolean }> {
+    if (!this.baseUrl) return { data: [], demo: true };
+    try {
+      const res = await this.fetchImpl(`${this.baseUrl}/api/inventory/critical?sellerId=${this.sellerId}`);
+      if (!res.ok) throw new ApiClientError(`critical_stock_http_${res.status}`);
+      const body = (await res.json()) as { items: CriticalStockItem[] };
+      return { data: body.items, demo: false };
+    } catch {
+      return { data: [], demo: true };
+    }
+  }
+
+
     if (!this.baseUrl) return { data: [], demo: true };
     try {
       const res = await this.fetchImpl(`${this.baseUrl}/api/sync/connection-errors?sellerId=${this.sellerId}`);

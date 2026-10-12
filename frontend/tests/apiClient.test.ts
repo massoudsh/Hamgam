@@ -27,7 +27,14 @@ describe("ApiClient", () => {
     expect(result.data).toEqual(liveKpis);
   });
 
-  it("loads connection errors from the live backend", async () => {
+  it("loads critical stock from the live backend", async () => {
+    const items = [{ skuId: "sku1", quantityOnHand: 1, lowStockThreshold: 3, internalCode: "SKU-1", canonicalTitle: "کالای تست" }];
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ items }) });
+    const client = new ApiClient({ sellerId: "s1", baseUrl: "http://localhost:4000", fetchImpl });
+    await expect(client.getCriticalStock()).resolves.toEqual({ data: items, demo: false });
+  });
+
+
     const errors = [{ channelConnectionId: "c1", channelCode: "woocommerce", channelDisplayName: "ووکامرس", lastError: "timeout", updatedAt: "2026-10-12T00:00:00Z" }];
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ errors }) });
     const client = new ApiClient({ sellerId: "s1", baseUrl: "http://localhost:4000", fetchImpl });

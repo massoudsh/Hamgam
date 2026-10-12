@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ApiClient } from "@/lib/apiClient";
-import type { DashboardKpis, OrderHubFilters as Filters, OrderHubRow, SyncConnectionError } from "@/lib/types";
+import type { CriticalStockItem, DashboardKpis, OrderHubFilters as Filters, OrderHubRow, SyncConnectionError } from "@/lib/types";
+import { CriticalStockAlerts } from "./CriticalStockAlerts";
 import { SyncConnectionErrors } from "./SyncConnectionErrors";
 import { KpiCards } from "./KpiCards";
 import { OrderHubFilters } from "./OrderHubFilters";
@@ -16,6 +17,7 @@ export function Dashboard() {
   const [kpis, setKpis] = useState<DashboardKpis | null>(null);
   const [orders, setOrders] = useState<OrderHubRow[]>([]);
   const [connectionErrors, setConnectionErrors] = useState<SyncConnectionError[]>([]);
+  const [criticalStock, setCriticalStock] = useState<CriticalStockItem[]>([]);
   const [isDemo, setIsDemo] = useState(client.isDemoMode);
   const [loading, setLoading] = useState(true);
 
@@ -42,6 +44,18 @@ export function Dashboard() {
       cancelled = true;
     };
   }, [client]);
+  useEffect(() => {
+    let cancelled = false;
+    client.getCriticalStock().then(({ data, demo }) => {
+      if (cancelled) return;
+      setCriticalStock(data);
+      setIsDemo((prev) => prev || demo);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client]);
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
@@ -92,6 +106,7 @@ export function Dashboard() {
 
         <section className="dashboard-content">
           {kpis && <KpiCards kpis={kpis} />}
+          <CriticalStockAlerts items={criticalStock} />
           <SyncConnectionErrors errors={connectionErrors} />
 
           <section className="order-hub" id="orders" aria-label="مرکز سفارش‌ها">
