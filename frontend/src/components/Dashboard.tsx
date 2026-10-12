@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ApiClient } from "@/lib/apiClient";
-import type { CriticalStockItem, DashboardKpis, OrderHubFilters as Filters, OrderHubRow, SyncConnectionError } from "@/lib/types";
+import type { CriticalStockItem, DashboardKpis, OrderHubFilters as Filters, OrderHubRow, ReturnRequest, SyncConnectionError } from "@/lib/types";
+import { ReturnHistory } from "./ReturnHistory";
 import { CriticalStockAlerts } from "./CriticalStockAlerts";
 import { SyncConnectionErrors } from "./SyncConnectionErrors";
 import { KpiCards } from "./KpiCards";
@@ -18,6 +19,7 @@ export function Dashboard() {
   const [orders, setOrders] = useState<OrderHubRow[]>([]);
   const [connectionErrors, setConnectionErrors] = useState<SyncConnectionError[]>([]);
   const [criticalStock, setCriticalStock] = useState<CriticalStockItem[]>([]);
+  const [returns, setReturns] = useState<ReturnRequest[]>([]);
   const [isDemo, setIsDemo] = useState(client.isDemoMode);
   const [loading, setLoading] = useState(true);
 
@@ -49,6 +51,18 @@ export function Dashboard() {
     client.getCriticalStock().then(({ data, demo }) => {
       if (cancelled) return;
       setCriticalStock(data);
+      setIsDemo((prev) => prev || demo);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client]);
+
+  useEffect(() => {
+    let cancelled = false;
+    client.getReturns().then(({ data, demo }) => {
+      if (cancelled) return;
+      setReturns(data);
       setIsDemo((prev) => prev || demo);
     });
     return () => {
@@ -108,6 +122,7 @@ export function Dashboard() {
           {kpis && <KpiCards kpis={kpis} />}
           <CriticalStockAlerts items={criticalStock} />
           <SyncConnectionErrors errors={connectionErrors} />
+          <ReturnHistory returns={returns} />
 
           <section className="order-hub" id="orders" aria-label="مرکز سفارش‌ها">
             <div className="section-heading">

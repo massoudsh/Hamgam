@@ -26,6 +26,20 @@ export interface CriticalStockItem {
   canonicalTitle: string;
 }
 
+export interface ReturnRequest {
+  id: string;
+  orderId: string;
+  status: string;
+  reason: string | null;
+  createdAt: string;
+  items: Array<{
+    orderItemId: string;
+    skuId: string;
+    quantity: number;
+    restock: boolean;
+  }>;
+}
+
 export interface SyncConnectionError {
   channelConnectionId: string;
   channelCode: string;

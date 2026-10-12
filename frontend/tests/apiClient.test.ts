@@ -27,7 +27,14 @@ describe("ApiClient", () => {
     expect(result.data).toEqual(liveKpis);
   });
 
-  it("loads critical stock from the live backend", async () => {
+  it("loads returns from the live backend", async () => {
+    const items = [{ id: "r1", orderId: "o1", status: "received", reason: "خرابی", createdAt: "2026-10-12T00:00:00Z", items: [] }];
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ items }) });
+    const client = new ApiClient({ sellerId: "s1", baseUrl: "http://localhost:4000", fetchImpl });
+    await expect(client.getReturns()).resolves.toEqual({ data: items, demo: false });
+  });
+
+
     const items = [{ skuId: "sku1", quantityOnHand: 1, lowStockThreshold: 3, internalCode: "SKU-1", canonicalTitle: "کالای تست" }];
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ items }) });
     const client = new ApiClient({ sellerId: "s1", baseUrl: "http://localhost:4000", fetchImpl });

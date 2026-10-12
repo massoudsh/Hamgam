@@ -1,4 +1,4 @@
-import type { CriticalStockItem, DashboardKpis, OrderHubFilters, OrderHubRow, SyncConnectionError } from "./types";
+import type { CriticalStockItem, DashboardKpis, OrderHubFilters, OrderHubRow, ReturnRequest, SyncConnectionError } from "./types";
 import { demoKpis, demoOrders } from "./demoData";
 
 export class ApiClientError extends Error {}
@@ -44,6 +44,18 @@ export class ApiClient {
     }
   }
 
+  async getReturns(): Promise<{ data: ReturnRequest[]; demo: boolean }> {
+    if (!this.baseUrl) return { data: [], demo: true };
+    try {
+      const res = await this.fetchImpl(`${this.baseUrl}/api/returns?sellerId=${this.sellerId}`);
+      if (!res.ok) throw new ApiClientError(`returns_http_${res.status}`);
+      const body = (await res.json()) as { items: ReturnRequest[] };
+      return { data: body.items, demo: false };
+    } catch {
+      return { data: [], demo: true };
+    }
+  }
+
   async getCriticalStock(): Promise<{ data: CriticalStockItem[]; demo: boolean }> {
     if (!this.baseUrl) return { data: [], demo: true };
     try {
@@ -56,7 +68,7 @@ export class ApiClient {
     }
   }
 
-
+  async getSyncConnectionErrors(): Promise<{ data: SyncConnectionError[]; demo: boolean }> {
     if (!this.baseUrl) return { data: [], demo: true };
     try {
       const res = await this.fetchImpl(`${this.baseUrl}/api/sync/connection-errors?sellerId=${this.sellerId}`);
@@ -68,7 +80,7 @@ export class ApiClient {
     }
   }
 
-
+  async getOrderHub(filters: OrderHubFilters = {}): Promise<{ data: OrderHubRow[]; demo: boolean }> {
     if (!this.baseUrl) return { data: filterDemoOrders(filters), demo: true };
     try {
       const params = new URLSearchParams({ sellerId: this.sellerId, ...stripUndefined(filters) });
