@@ -18,7 +18,17 @@ export interface OrderHubRow {
   placedAt: string;
 }
 
-export interface ChannelConnection {
+export interface SalesReport {
+  byChannel: Array<{
+    channelCode: string;
+    channelDisplayName: string;
+    orderCount: number;
+    totalAmount: number;
+  }>;
+  byStatus: Array<{ status: string; orderCount: number }>;
+}
+
+
   id: string;
   code: string;
   displayName: string;

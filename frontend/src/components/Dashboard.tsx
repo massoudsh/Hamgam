@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ApiClient } from "@/lib/apiClient";
-import type { ChannelConnection, CriticalStockItem, DashboardKpis, OrderHubFilters as Filters, OrderHubRow, ReturnRequest, SyncConnectionError } from "@/lib/types";
+import type { ChannelConnection, CriticalStockItem, DashboardKpis, OrderHubFilters as Filters, OrderHubRow, ReturnRequest, SalesReport as SalesReportData, SyncConnectionError } from "@/lib/types";
+import { SalesReport } from "./SalesReport";
 import { ChannelConnections } from "./ChannelConnections";
 import { ReturnHistory } from "./ReturnHistory";
 import { CriticalStockAlerts } from "./CriticalStockAlerts";
@@ -22,6 +23,7 @@ export function Dashboard() {
   const [criticalStock, setCriticalStock] = useState<CriticalStockItem[]>([]);
   const [returns, setReturns] = useState<ReturnRequest[]>([]);
   const [connections, setConnections] = useState<ChannelConnection[]>([]);
+  const [salesReport, setSalesReport] = useState<SalesReportData>({ byChannel: [], byStatus: [] });
   const [isDemo, setIsDemo] = useState(client.isDemoMode);
   const [loading, setLoading] = useState(true);
 
@@ -86,6 +88,18 @@ export function Dashboard() {
 
   useEffect(() => {
     let cancelled = false;
+    client.getSalesReport().then(({ data, demo }) => {
+      if (cancelled) return;
+      setSalesReport(data);
+      setIsDemo((prev) => prev || demo);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client]);
+
+  useEffect(() => {
+    let cancelled = false;
     setLoading(true);
     client.getOrderHub(filters).then(({ data, demo }) => {
       if (cancelled) return;
@@ -138,6 +152,7 @@ export function Dashboard() {
           <ChannelConnections connections={connections} />
           <SyncConnectionErrors errors={connectionErrors} />
           <ReturnHistory returns={returns} />
+          <SalesReport report={salesReport} />
 
           <section className="order-hub" id="orders" aria-label="مرکز سفارش‌ها">
             <div className="section-heading">

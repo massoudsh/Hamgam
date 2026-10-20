@@ -27,7 +27,14 @@ describe("ApiClient", () => {
     expect(result.data).toEqual(liveKpis);
   });
 
-  it("loads channel connections from the live backend", async () => {
+  it("loads the sales report from the live backend", async () => {
+    const report = { byChannel: [], byStatus: [{ status: "new", orderCount: 2 }] };
+    const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => report });
+    const client = new ApiClient({ sellerId: "s1", baseUrl: "http://localhost:4000", fetchImpl });
+    await expect(client.getSalesReport()).resolves.toEqual({ data: report, demo: false });
+  });
+
+
     const items = [{ id: "c1", code: "woocommerce", displayName: "ووکامرس", status: "active", lastSyncedAt: null, lastError: null }];
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ items }) });
     const client = new ApiClient({ sellerId: "s1", baseUrl: "http://localhost:4000", fetchImpl });

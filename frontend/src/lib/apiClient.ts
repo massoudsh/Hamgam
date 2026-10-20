@@ -1,4 +1,4 @@
-import type { ChannelConnection, CriticalStockItem, DashboardKpis, OrderHubFilters, OrderHubRow, ReturnRequest, SyncConnectionError } from "./types";
+import type { ChannelConnection, CriticalStockItem, DashboardKpis, OrderHubFilters, OrderHubRow, ReturnRequest, SalesReport, SyncConnectionError } from "./types";
 import { demoKpis, demoOrders } from "./demoData";
 
 export class ApiClientError extends Error {}
@@ -44,7 +44,19 @@ export class ApiClient {
     }
   }
 
-  async getChannelConnections(): Promise<{ data: ChannelConnection[]; demo: boolean }> {
+  async getSalesReport(): Promise<{ data: SalesReport; demo: boolean }> {
+    const empty: SalesReport = { byChannel: [], byStatus: [] };
+    if (!this.baseUrl) return { data: empty, demo: true };
+    try {
+      const res = await this.fetchImpl(`${this.baseUrl}/api/dashboard/reports/sales?sellerId=${this.sellerId}`);
+      if (!res.ok) throw new ApiClientError(`sales_report_http_${res.status}`);
+      return { data: (await res.json()) as SalesReport, demo: false };
+    } catch {
+      return { data: empty, demo: true };
+    }
+  }
+
+
     if (!this.baseUrl) return { data: [], demo: true };
     try {
       const res = await this.fetchImpl(`${this.baseUrl}/api/connectors?sellerId=${this.sellerId}`);

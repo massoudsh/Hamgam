@@ -33,7 +33,13 @@ describe("HTTP API", () => {
     expect(res.body.criticalStockSkuCount).toBe(1);
   });
 
-  it("GET /api/connectors returns seller connections without credentials", async () => {
+  it("GET /api/dashboard/reports/sales returns seller-scoped aggregates", async () => {
+    const res = await request(app).get("/api/dashboard/reports/sales").query({ sellerId });
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ byChannel: [], byStatus: [] });
+  });
+
+
     const channel = await db.query(`SELECT id FROM channel WHERE code = 'woocommerce'`);
     await db.query(
       `INSERT INTO channel_connection (seller_id, channel_id, credentials) VALUES ($1, $2, '{"consumerSecret":"hidden"}')`,
