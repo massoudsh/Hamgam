@@ -45,7 +45,14 @@ export interface SalesReport {
   canonicalTitle: string;
 }
 
-export interface ReturnRequest {
+export interface ReturnableOrderItem {
+  id: string;
+  skuId: string;
+  canonicalTitle: string;
+  quantity: number;
+}
+
+
   id: string;
   orderId: string;
   status: string;

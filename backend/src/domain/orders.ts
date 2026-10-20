@@ -127,7 +127,36 @@ export interface OrderHubRow {
   placedAt: Date;
 }
 
-export async function listOrderHub(db: QueryExecutor, filters: OrderHubFilters): Promise<OrderHubRow[]> {
+export interface ReturnableOrderItem {
+  id: string;
+  skuId: string;
+  canonicalTitle: string;
+  quantity: number;
+}
+
+export async function listReturnableOrderItems(
+  db: QueryExecutor,
+  sellerId: string,
+  orderId: string
+): Promise<ReturnableOrderItem[]> {
+  const result = await db.query(
+    `SELECT oi.id, oi.sku_id, s.canonical_title, oi.quantity
+     FROM order_item oi
+     JOIN "order" o ON o.id = oi.order_id
+     JOIN sku s ON s.id = oi.sku_id
+     WHERE oi.order_id = $1 AND o.seller_id = $2 AND o.status = 'shipped'
+     ORDER BY oi.id`,
+    [orderId, sellerId]
+  );
+  return result.rows.map((row) => ({
+    id: row.id,
+    skuId: row.sku_id,
+    canonicalTitle: row.canonical_title,
+    quantity: Number(row.quantity)
+  }));
+}
+
+
   const conditions: string[] = [`o.seller_id = $1`];
   const params: unknown[] = [filters.sellerId];
 

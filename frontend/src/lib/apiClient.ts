@@ -1,4 +1,4 @@
-import type { ChannelConnection, CriticalStockItem, DashboardKpis, OrderHubFilters, OrderHubRow, ReturnRequest, SalesReport, SyncConnectionError } from "./types";
+import type { ChannelConnection, CriticalStockItem, DashboardKpis, OrderHubFilters, OrderHubRow, ReturnableOrderItem, ReturnRequest, SalesReport, SyncConnectionError } from "./types";
 import { demoKpis, demoOrders } from "./demoData";
 
 export class ApiClientError extends Error {}
@@ -44,7 +44,30 @@ export class ApiClient {
     }
   }
 
-  async getSalesReport(): Promise<{ data: SalesReport; demo: boolean }> {
+  async getReturnableOrderItems(orderId: string): Promise<ReturnableOrderItem[]> {
+    if (!this.baseUrl) return [];
+    const res = await this.fetchImpl(`${this.baseUrl}/api/orders/${orderId}/returnable-items?sellerId=${this.sellerId}`);
+    if (!res.ok) throw new ApiClientError(`returnable_items_http_${res.status}`);
+    return ((await res.json()) as { items: ReturnableOrderItem[] }).items;
+  }
+
+  async createReturn(input: { orderId: string; orderItemId: string; quantity: number; reason?: string }): Promise<ReturnRequest> {
+    if (!this.baseUrl) throw new ApiClientError("returns_unavailable_in_demo");
+    const res = await this.fetchImpl(`${this.baseUrl}/api/returns`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        sellerId: this.sellerId,
+        orderId: input.orderId,
+        reason: input.reason || undefined,
+        items: [{ orderItemId: input.orderItemId, quantity: input.quantity, restock: true }]
+      })
+    });
+    if (!res.ok) throw new ApiClientError(`create_return_http_${res.status}`);
+    return (await res.json()) as ReturnRequest;
+  }
+
+
     const empty: SalesReport = { byChannel: [], byStatus: [] };
     if (!this.baseUrl) return { data: empty, demo: true };
     try {

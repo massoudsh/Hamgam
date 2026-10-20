@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ApiClient } from "@/lib/apiClient";
 import type { ChannelConnection, CriticalStockItem, DashboardKpis, OrderHubFilters as Filters, OrderHubRow, ReturnRequest, SalesReport as SalesReportData, SyncConnectionError } from "@/lib/types";
+import { ReturnRegistration } from "./ReturnRegistration";
 import { SalesReport } from "./SalesReport";
 import { ChannelConnections } from "./ChannelConnections";
 import { ReturnHistory } from "./ReturnHistory";
@@ -152,6 +153,15 @@ export function Dashboard() {
           <ChannelConnections connections={connections} />
           <SyncConnectionErrors errors={connectionErrors} />
           <ReturnHistory returns={returns} />
+          <ReturnRegistration
+            client={client}
+            orders={orders}
+            isDemo={isDemo}
+            onCreated={() => {
+              client.getReturns().then(({ data }) => setReturns(data));
+              client.getOrderHub(filters).then(({ data }) => setOrders(data));
+            }}
+          />
           <SalesReport report={salesReport} />
 
           <section className="order-hub" id="orders" aria-label="مرکز سفارش‌ها">

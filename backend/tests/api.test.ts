@@ -5,6 +5,7 @@ import type { QueryExecutor } from "../src/db/pool.js";
 import { createTestDb } from "./testDb.js";
 import { createApp } from "../src/app.js";
 import { createSku } from "../src/domain/sku.js";
+import { createOrder } from "../src/domain/orders.js";
 
 describe("HTTP API", () => {
   let db: QueryExecutor;
@@ -33,7 +34,30 @@ describe("HTTP API", () => {
     expect(res.body.criticalStockSkuCount).toBe(1);
   });
 
-  it("GET /api/dashboard/reports/sales returns seller-scoped aggregates", async () => {
+  it("GET /api/orders/:orderId/returnable-items scopes shipped order items to the seller", async () => {
+    const channel = await db.query(`SELECT id FROM channel WHERE code = 'instagram'`);
+    const connection = await db.query(
+      `INSERT INTO channel_connection (seller_id, channel_id, credentials) VALUES ($1, $2, '{}') RETURNING id`,
+      [sellerId, channel.rows[0].id]
+    );
+    const skuId = await createSku(db, { sellerId, internalCode: "RETURN-1", canonicalTitle: "کالای مرجوعی", initialStock: 4 });
+    const created = await createOrder(db, {
+      sellerId,
+      channelConnectionId: connection.rows[0].id,
+      externalOrderId: "returnable-1",
+      status: "shipped",
+      placedAt: new Date(),
+      items: [{ skuId, quantity: 1, unitPrice: 100 }]
+    });
+
+    const res = await request(app)
+      .get(`/api/orders/${created.orderId}/returnable-items`)
+      .query({ sellerId });
+    expect(res.status).toBe(200);
+    expect(res.body.items).toEqual([expect.objectContaining({ skuId, canonicalTitle: "کالای مرجوعی", quantity: 1 })]);
+  });
+
+
     const res = await request(app).get("/api/dashboard/reports/sales").query({ sellerId });
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ byChannel: [], byStatus: [] });

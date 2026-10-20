@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import type { QueryExecutor } from "../db/pool.js";
-import { listOrderHub } from "../domain/orders.js";
+import { listOrderHub, listReturnableOrderItems } from "../domain/orders.js";
 
 const filterSchema = z.object({
   sellerId: z.string().uuid(),
@@ -29,6 +29,16 @@ export function ordersRouter(db: QueryExecutor): Router {
         offset: parsed.offset
       });
       res.json({ items: rows });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  router.get("/orders/:orderId/returnable-items", async (req, res, next) => {
+    try {
+      const { sellerId } = z.object({ sellerId: z.string().uuid() }).parse(req.query);
+      const { orderId } = z.object({ orderId: z.string().uuid() }).parse(req.params);
+      res.json({ items: await listReturnableOrderItems(db, sellerId, orderId) });
     } catch (err) {
       next(err);
     }

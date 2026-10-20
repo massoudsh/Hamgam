@@ -27,7 +27,19 @@ describe("ApiClient", () => {
     expect(result.data).toEqual(liveKpis);
   });
 
-  it("loads the sales report from the live backend", async () => {
+  it("loads returnable items and submits a restocking return", async () => {
+    const item = { id: "item1", skuId: "sku1", canonicalTitle: "کالای تست", quantity: 2 };
+    const created = { id: "return1", orderId: "order1", status: "received", reason: null, createdAt: "2026-10-12T00:00:00Z", items: [] };
+    const fetchImpl = vi.fn()
+      .mockResolvedValueOnce({ ok: true, json: async () => ({ items: [item] }) })
+      .mockResolvedValueOnce({ ok: true, json: async () => created });
+    const client = new ApiClient({ sellerId: "seller1", baseUrl: "http://localhost:4000", fetchImpl });
+    await expect(client.getReturnableOrderItems("order1")).resolves.toEqual([item]);
+    await expect(client.createReturn({ orderId: "order1", orderItemId: "item1", quantity: 1 })).resolves.toEqual(created);
+    expect(fetchImpl.mock.calls[1][1]).toMatchObject({ method: "POST" });
+  });
+
+
     const report = { byChannel: [], byStatus: [{ status: "new", orderCount: 2 }] };
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => report });
     const client = new ApiClient({ sellerId: "s1", baseUrl: "http://localhost:4000", fetchImpl });
