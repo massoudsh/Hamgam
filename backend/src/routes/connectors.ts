@@ -57,9 +57,36 @@ async function resolveOrderEventToOrder(
 }
 
 const webhookSchema = z.object({ sellerId: z.string().uuid(), channelConnectionId: z.string().uuid() });
+const connectionsQuerySchema = z.object({ sellerId: z.string().uuid() });
 
 export function connectorsRouter(db: QueryExecutor): Router {
   const router = Router();
+
+  router.get("/connectors", async (req, res, next) => {
+    try {
+      const { sellerId } = connectionsQuerySchema.parse(req.query);
+      const connections = await db.query(
+        `SELECT cc.id, ch.code, ch.display_name, cc.status, cc.last_synced_at, cc.last_error
+         FROM channel_connection cc
+         JOIN channel ch ON ch.id = cc.channel_id
+         WHERE cc.seller_id = $1
+         ORDER BY ch.display_name`,
+        [sellerId]
+      );
+      res.json({
+        items: connections.rows.map((connection) => ({
+          id: connection.id,
+          code: connection.code,
+          displayName: connection.display_name,
+          status: connection.status,
+          lastSyncedAt: connection.last_synced_at,
+          lastError: connection.last_error
+        }))
+      });
+    } catch (err) {
+      next(err);
+    }
+  });
 
   router.post("/connectors/woocommerce/webhook", async (req, res, next) => {
     try {

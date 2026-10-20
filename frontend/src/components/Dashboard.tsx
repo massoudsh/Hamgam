@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ApiClient } from "@/lib/apiClient";
-import type { CriticalStockItem, DashboardKpis, OrderHubFilters as Filters, OrderHubRow, ReturnRequest, SyncConnectionError } from "@/lib/types";
+import type { ChannelConnection, CriticalStockItem, DashboardKpis, OrderHubFilters as Filters, OrderHubRow, ReturnRequest, SyncConnectionError } from "@/lib/types";
+import { ChannelConnections } from "./ChannelConnections";
 import { ReturnHistory } from "./ReturnHistory";
 import { CriticalStockAlerts } from "./CriticalStockAlerts";
 import { SyncConnectionErrors } from "./SyncConnectionErrors";
@@ -20,6 +21,7 @@ export function Dashboard() {
   const [connectionErrors, setConnectionErrors] = useState<SyncConnectionError[]>([]);
   const [criticalStock, setCriticalStock] = useState<CriticalStockItem[]>([]);
   const [returns, setReturns] = useState<ReturnRequest[]>([]);
+  const [connections, setConnections] = useState<ChannelConnection[]>([]);
   const [isDemo, setIsDemo] = useState(client.isDemoMode);
   const [loading, setLoading] = useState(true);
 
@@ -63,6 +65,18 @@ export function Dashboard() {
     client.getReturns().then(({ data, demo }) => {
       if (cancelled) return;
       setReturns(data);
+      setIsDemo((prev) => prev || demo);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [client]);
+
+  useEffect(() => {
+    let cancelled = false;
+    client.getChannelConnections().then(({ data, demo }) => {
+      if (cancelled) return;
+      setConnections(data);
       setIsDemo((prev) => prev || demo);
     });
     return () => {
@@ -121,6 +135,7 @@ export function Dashboard() {
         <section className="dashboard-content">
           {kpis && <KpiCards kpis={kpis} />}
           <CriticalStockAlerts items={criticalStock} />
+          <ChannelConnections connections={connections} />
           <SyncConnectionErrors errors={connectionErrors} />
           <ReturnHistory returns={returns} />
 

@@ -33,7 +33,21 @@ describe("HTTP API", () => {
     expect(res.body.criticalStockSkuCount).toBe(1);
   });
 
-  it("POST /api/connectors/instagram/manual-order creates an order end-to-end", async () => {
+  it("GET /api/connectors returns seller connections without credentials", async () => {
+    const channel = await db.query(`SELECT id FROM channel WHERE code = 'woocommerce'`);
+    await db.query(
+      `INSERT INTO channel_connection (seller_id, channel_id, credentials) VALUES ($1, $2, '{"consumerSecret":"hidden"}')`,
+      [sellerId, channel.rows[0].id]
+    );
+
+    const res = await request(app).get("/api/connectors").query({ sellerId });
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.items[0]).toMatchObject({ code: "woocommerce", status: "active" });
+    expect(res.body.items[0]).not.toHaveProperty("credentials");
+  });
+
+
     const channel = await db.query(`SELECT id FROM channel WHERE code = 'instagram'`);
     const conn = await db.query(
       `INSERT INTO channel_connection (seller_id, channel_id, credentials) VALUES ($1,$2,'{}') RETURNING id`,
