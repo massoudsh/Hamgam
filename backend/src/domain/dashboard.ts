@@ -45,10 +45,9 @@ export async function getSalesReport(db: QueryExecutor, sellerId: string): Promi
   };
 }
 
-
- * that would have driven a SKU negative but were instead recorded as
- * out-of-stock (see InsufficientStockError handling in domain/orders.ts),
- * i.e. `inventory_ledger` entries whose SKU is currently at 0.
+/**
+ * Counts recent orders, critical stock items, and prevented overselling events.
+ * Prevented events are ledger entries for SKUs currently at zero stock.
  */
 export async function getDashboardKpis(db: QueryExecutor, sellerId: string): Promise<DashboardKpis> {
   const orders = await db.query(

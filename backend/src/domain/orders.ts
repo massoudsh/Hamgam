@@ -155,8 +155,7 @@ export async function listReturnableOrderItems(
     quantity: Number(row.quantity)
   }));
 }
-
-
+export async function listOrderHub(db: QueryExecutor, filters: OrderHubFilters): Promise<OrderHubRow[]> {
   const conditions: string[] = [`o.seller_id = $1`];
   const params: unknown[] = [filters.sellerId];
 
