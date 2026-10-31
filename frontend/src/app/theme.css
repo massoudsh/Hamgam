@@ -1,0 +1,88 @@
+:root {
+  color-scheme: light;
+  --glass-subtle: #f3f5fc;
+  --glass-medium: #ffffff;
+  --glass-elevated: #ffffff;
+  --glass-blur: 10px;
+  --glass-shadow: 0 8px 24px #18264a0d;
+  --motion-fast: 160ms;
+  --layer-header: 10;
+  --layer-controls: 20;
+  --focus-ring: #364bc0;
+  --space-panel: 24px;
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-bg: #131927;
+  --color-surface: #202a3c;
+  --color-surface-subtle: #182133;
+  --color-border: #53627a;
+  --color-text: #f1f5ff;
+  --color-muted: #bdc9dd;
+  --color-primary: #b7c4ff;
+  --color-primary-soft: #303f69;
+  --color-success: #8de5c4;
+  --color-success-soft: #1c443b;
+  --color-warning: #ffda8b;
+  --color-warning-soft: #47391e;
+  --glass-subtle: #182133;
+  --glass-medium: #202a3c;
+  --glass-elevated: #28354a;
+  --focus-ring: #b7c4ff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    color-scheme: dark;
+    --color-bg: #131927;
+    --color-surface: #202a3c;
+    --color-surface-subtle: #182133;
+    --color-border: #53627a;
+    --color-text: #f1f5ff;
+    --color-muted: #bdc9dd;
+    --color-primary: #b7c4ff;
+    --color-primary-soft: #303f69;
+    --color-success: #8de5c4;
+    --color-success-soft: #1c443b;
+    --color-warning: #ffda8b;
+    --color-warning-soft: #47391e;
+    --glass-subtle: #182133;
+    --glass-medium: #202a3c;
+    --glass-elevated: #28354a;
+    --focus-ring: #b7c4ff;
+  }
+}
+.kpi-card, .order-hub, .return-history, .return-registration, .channel-connections, .sales-report,
+.critical-stock, .sync-errors, .glass-surface {
+  background: var(--glass-medium);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--glass-shadow);
+}
+.glass-surface { padding: var(--space-panel); }
+.glass-surface[data-variant="subtle"] { background: var(--glass-subtle); box-shadow: none; }
+.glass-surface[data-variant="elevated"] { background: var(--glass-elevated); }
+.topbar { position: sticky; top: 0; z-index: var(--layer-header); background: var(--glass-elevated); padding-block-start: 60px; }
+@supports (backdrop-filter: blur(1px)) {
+  .topbar { background: color-mix(in srgb, var(--glass-elevated) 94%, transparent); backdrop-filter: blur(var(--glass-blur)); }
+}
+.theme-control { position: fixed; inset-inline-end: 18px; top: 10px; z-index: var(--layer-controls); display: flex; align-items: center; gap: 8px; padding: 4px 12px; border-radius: var(--radius); background: var(--glass-elevated); color: var(--color-text); border: 1px solid var(--color-border); }
+.theme-control select { background: var(--color-surface); color: var(--color-text); border: 1px solid var(--color-border); border-radius: 6px; min-height: 36px; }
+button, a, input, select, textarea { transition: background-color var(--motion-fast), border-color var(--motion-fast); }
+:where(button, a, input, select, textarea):focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 3px; }
+input, select, textarea, .filter-field input, .filter-field select, .return-form input, .return-form select { font-size: 16px; min-width: 0; }
+.return-form button { background: var(--color-text); color: var(--color-bg); }
+.channel-name { color: var(--color-text); }
+.order-hub-table tbody tr:hover { background: var(--color-surface-subtle); }
+.return-list strong, .sync-error-list p, .channel-connection-list span { overflow-wrap: anywhere; }
+.order-id { unicode-bidi: isolate; }
+.return-list li, .sync-error-list li { flex-wrap: wrap; }
+@media (min-width: 901px) { .sidebar { position: sticky; top: 0; height: 100vh; } }
+@media (max-width: 640px) {
+  .topbar { position: static; padding-block-start: 60px; }
+  .theme-control { position: absolute; top: 66px; }
+  .main-nav .nav-item { display: flex; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}
+@media (prefers-reduced-transparency: reduce) { .topbar { backdrop-filter: none; background: var(--glass-elevated); } }
