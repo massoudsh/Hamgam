@@ -29,6 +29,7 @@ export interface SalesReport {
 }
 
 
+export interface ChannelConnection {
   id: string;
   code: string;
   displayName: string;
@@ -38,6 +39,7 @@ export interface SalesReport {
 }
 
 
+export interface CriticalStockItem {
   skuId: string;
   quantityOnHand: number;
   lowStockThreshold: number;
@@ -53,6 +55,7 @@ export interface ReturnableOrderItem {
 }
 
 
+export interface ReturnRequest {
   id: string;
   orderId: string;
   status: string;

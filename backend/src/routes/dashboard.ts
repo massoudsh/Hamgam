@@ -26,6 +26,5 @@ export function dashboardRouter(db: QueryExecutor): Router {
       next(err);
     }
   });
-
-
+  return router;
 }

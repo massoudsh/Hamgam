@@ -34,6 +34,26 @@ describe("HTTP API", () => {
     expect(res.body.criticalStockSkuCount).toBe(1);
   });
 
+  it("GET /api/dashboard/reports/sales returns seller-scoped aggregates", async () => {
+    const res = await request(app).get("/api/dashboard/reports/sales").query({ sellerId });
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ byChannel: [], byStatus: [] });
+  });
+
+  it("GET /api/connectors returns seller connections without credentials", async () => {
+    const channel = await db.query(`SELECT id FROM channel WHERE code = 'woocommerce'`);
+    await db.query(
+      `INSERT INTO channel_connection (seller_id, channel_id, credentials) VALUES ($1, $2, '{"consumerSecret":"hidden"}')`,
+      [sellerId, channel.rows[0].id]
+    );
+
+    const res = await request(app).get("/api/connectors").query({ sellerId });
+    expect(res.status).toBe(200);
+    expect(res.body.items).toHaveLength(1);
+    expect(res.body.items[0]).toMatchObject({ code: "woocommerce", status: "active" });
+    expect(res.body.items[0]).not.toHaveProperty("credentials");
+  });
+
   it("GET /api/orders/:orderId/returnable-items scopes shipped order items to the seller", async () => {
     const channel = await db.query(`SELECT id FROM channel WHERE code = 'instagram'`);
     const connection = await db.query(
@@ -57,27 +77,7 @@ describe("HTTP API", () => {
     expect(res.body.items).toEqual([expect.objectContaining({ skuId, canonicalTitle: "کالای مرجوعی", quantity: 1 })]);
   });
 
-
-    const res = await request(app).get("/api/dashboard/reports/sales").query({ sellerId });
-    expect(res.status).toBe(200);
-    expect(res.body).toEqual({ byChannel: [], byStatus: [] });
-  });
-
-
-    const channel = await db.query(`SELECT id FROM channel WHERE code = 'woocommerce'`);
-    await db.query(
-      `INSERT INTO channel_connection (seller_id, channel_id, credentials) VALUES ($1, $2, '{"consumerSecret":"hidden"}')`,
-      [sellerId, channel.rows[0].id]
-    );
-
-    const res = await request(app).get("/api/connectors").query({ sellerId });
-    expect(res.status).toBe(200);
-    expect(res.body.items).toHaveLength(1);
-    expect(res.body.items[0]).toMatchObject({ code: "woocommerce", status: "active" });
-    expect(res.body.items[0]).not.toHaveProperty("credentials");
-  });
-
-
+  it("POST /api/connectors/instagram/manual-order creates an order end-to-end", async () => {
     const channel = await db.query(`SELECT id FROM channel WHERE code = 'instagram'`);
     const conn = await db.query(
       `INSERT INTO channel_connection (seller_id, channel_id, credentials) VALUES ($1,$2,'{}') RETURNING id`,

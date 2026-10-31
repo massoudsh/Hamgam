@@ -68,6 +68,7 @@ export class ApiClient {
   }
 
 
+  async getSalesReport(): Promise<{ data: SalesReport; demo: boolean }> {
     const empty: SalesReport = { byChannel: [], byStatus: [] };
     if (!this.baseUrl) return { data: empty, demo: true };
     try {
@@ -80,6 +81,7 @@ export class ApiClient {
   }
 
 
+  async getChannelConnections(): Promise<{ data: ChannelConnection[]; demo: boolean }> {
     if (!this.baseUrl) return { data: [], demo: true };
     try {
       const res = await this.fetchImpl(`${this.baseUrl}/api/connectors?sellerId=${this.sellerId}`);
@@ -92,6 +94,7 @@ export class ApiClient {
   }
 
 
+  async getReturns(): Promise<{ data: ReturnRequest[]; demo: boolean }> {
     if (!this.baseUrl) return { data: [], demo: true };
     try {
       const res = await this.fetchImpl(`${this.baseUrl}/api/returns?sellerId=${this.sellerId}`);

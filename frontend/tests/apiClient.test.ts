@@ -40,6 +40,7 @@ describe("ApiClient", () => {
   });
 
 
+  it("loads sales reports", async () => {
     const report = { byChannel: [], byStatus: [{ status: "new", orderCount: 2 }] };
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => report });
     const client = new ApiClient({ sellerId: "s1", baseUrl: "http://localhost:4000", fetchImpl });
@@ -47,6 +48,7 @@ describe("ApiClient", () => {
   });
 
 
+  it("loads channel connections", async () => {
     const items = [{ id: "c1", code: "woocommerce", displayName: "ووکامرس", status: "active", lastSyncedAt: null, lastError: null }];
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ items }) });
     const client = new ApiClient({ sellerId: "s1", baseUrl: "http://localhost:4000", fetchImpl });
@@ -54,6 +56,7 @@ describe("ApiClient", () => {
   });
 
 
+  it("loads return history", async () => {
     const items = [{ id: "r1", orderId: "o1", status: "received", reason: "خرابی", createdAt: "2026-10-12T00:00:00Z", items: [] }];
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ items }) });
     const client = new ApiClient({ sellerId: "s1", baseUrl: "http://localhost:4000", fetchImpl });
@@ -61,6 +64,7 @@ describe("ApiClient", () => {
   });
 
 
+  it("loads critical stock", async () => {
     const items = [{ skuId: "sku1", quantityOnHand: 1, lowStockThreshold: 3, internalCode: "SKU-1", canonicalTitle: "کالای تست" }];
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ items }) });
     const client = new ApiClient({ sellerId: "s1", baseUrl: "http://localhost:4000", fetchImpl });
@@ -68,6 +72,7 @@ describe("ApiClient", () => {
   });
 
 
+  it("loads connection errors", async () => {
     const errors = [{ channelConnectionId: "c1", channelCode: "woocommerce", channelDisplayName: "ووکامرس", lastError: "timeout", updatedAt: "2026-10-12T00:00:00Z" }];
     const fetchImpl = vi.fn().mockResolvedValue({ ok: true, json: async () => ({ errors }) });
     const client = new ApiClient({ sellerId: "s1", baseUrl: "http://localhost:4000", fetchImpl });
@@ -80,6 +85,7 @@ describe("ApiClient", () => {
   });
 
 
+  it("filters demo orders by channel", async () => {
     const client = new ApiClient({ sellerId: "s1" });
     const { data } = await client.getOrderHub({ channel: "basalam" });
     expect(data.every((o) => o.channelCode === "basalam")).toBe(true);
