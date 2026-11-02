@@ -5,7 +5,7 @@ interface KpiCardsProps {
 }
 
 const cards = [
-  { key: "ordersLast30Days" as const, label: "سفارش‌های ۳۰ روز اخیر", hint: "نسبت به ماه گذشته", tone: "primary" },
+  { key: "ordersLast30Days" as const, label: "سفارش‌های ۳۰ روز اخیر", hint: "سفارش‌های ثبت‌شده در این بازه", tone: "primary" },
   { key: "criticalStockSkuCount" as const, label: "موجودی بحرانی", hint: "نیازمند رسیدگی", tone: "warning" },
   { key: "overslellingPreventedCount" as const, label: "جلوگیری از فروش بیش از موجودی", hint: "با همگام‌سازی خودکار", tone: "success" }
 ];

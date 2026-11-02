@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ApiClient } from "@/lib/apiClient";
 import type { ChannelConnection, CriticalStockItem, DashboardKpis, OrderHubFilters as Filters, OrderHubRow, ReturnRequest, SalesReport as SalesReportData, SyncConnectionError } from "@/lib/types";
+import { ThemeControl } from "./ThemeControl";
 import { ReturnRegistration } from "./ReturnRegistration";
 import { SalesReport } from "./SalesReport";
 import { ChannelConnections } from "./ChannelConnections";
@@ -114,7 +115,7 @@ export function Dashboard() {
   }, [client, filters]);
 
   return (
-    <main dir="rtl" className="app-shell">
+    <div dir="rtl" className="app-shell">
       <aside className="sidebar" aria-label="ناوبری اصلی">
         <div className="brand-mark" aria-label="همگام">ه</div>
         <div className="brand-copy">
@@ -122,11 +123,11 @@ export function Dashboard() {
           <span>مدیریت هوشمند فروش</span>
         </div>
         <nav className="main-nav">
-          <a className="nav-item nav-item-active" href="#dashboard">داشبورد</a>
-          <a className="nav-item" href="#orders">سفارش‌ها <span>{orders.length.toLocaleString("fa-IR")}</span></a>
-          <a className="nav-item" href="#inventory">موجودی</a>
-          <a className="nav-item" href="#channels">کانال‌های فروش</a>
-          <a className="nav-item" href="#reports">گزارش‌ها</a>
+          <a className="nav-item nav-item-active" href="#dashboard"><span className="nav-index" aria-hidden="true">۰۱</span>داشبورد</a>
+          <a className="nav-item" href="#orders"><span className="nav-index" aria-hidden="true">۰۲</span>سفارش‌ها <span className="nav-count">{orders.length.toLocaleString("fa-IR")}</span></a>
+          <a className="nav-item" href="#inventory"><span className="nav-index" aria-hidden="true">۰۳</span>موجودی</a>
+          <a className="nav-item" href="#channels"><span className="nav-index" aria-hidden="true">۰۴</span>کانال‌های فروش</a>
+          <a className="nav-item" href="#reports"><span className="nav-index" aria-hidden="true">۰۵</span>گزارش‌ها</a>
         </nav>
         <div className="sidebar-footer">
           <div className="avatar">ف</div>
@@ -143,26 +144,17 @@ export function Dashboard() {
           </div>
           <div className="topbar-actions">
             {isDemo && <span className="demo-badge" role="status">حالت نمایشی</span>}
-            <button className="notification-button" type="button" aria-label="اعلان‌ها">اعلان‌ها</button>
+            <ThemeControl />
+            <a className="notification-button" href="#orders">مشاهده سفارش‌ها <span aria-hidden="true">↙</span></a>
           </div>
         </header>
 
-        <section className="dashboard-content">
+        <main className="dashboard-content" id="main-content" tabIndex={-1}>
+          <div className="workspace-intro">
+            <div><p className="eyebrow">فضای کاری فروشگاه</p><h2>همه‌چیز، هماهنگ.</h2></div>
+            <p>سفارش‌ها، موجودی و کانال‌های فروش؛ در یک نگاه.</p>
+          </div>
           {kpis && <KpiCards kpis={kpis} />}
-          <CriticalStockAlerts items={criticalStock} />
-          <ChannelConnections connections={connections} />
-          <SyncConnectionErrors errors={connectionErrors} />
-          <ReturnHistory returns={returns} />
-          <ReturnRegistration
-            client={client}
-            orders={orders}
-            isDemo={isDemo}
-            onCreated={() => {
-              client.getReturns().then(({ data }) => setReturns(data));
-              client.getOrderHub(filters).then(({ data }) => setOrders(data));
-            }}
-          />
-          <SalesReport report={salesReport} />
 
           <section className="order-hub" id="orders" aria-label="مرکز سفارش‌ها">
             <div className="section-heading">
@@ -175,8 +167,24 @@ export function Dashboard() {
             <OrderHubFilters value={filters} onChange={setFilters} />
             {loading ? <div className="table-loading" role="status">در حال دریافت سفارش‌ها…</div> : <OrderHubTable orders={orders} />}
           </section>
-        </section>
+          <div className="dashboard-panels">
+            <CriticalStockAlerts items={criticalStock} />
+            <ChannelConnections connections={connections} />
+            <SyncConnectionErrors errors={connectionErrors} />
+            <SalesReport report={salesReport} />
+            <ReturnRegistration
+              client={client}
+              orders={orders}
+              isDemo={isDemo}
+              onCreated={() => {
+                client.getReturns().then(({ data }) => setReturns(data));
+                client.getOrderHub(filters).then(({ data }) => setOrders(data));
+              }}
+            />
+            <ReturnHistory returns={returns} />
+          </div>
+        </main>
       </div>
-    </main>
+    </div>
   );
 }

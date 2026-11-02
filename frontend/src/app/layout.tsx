@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
+import "@fontsource-variable/vazirmatn";
 import "./globals.css";
 import "./theme.css";
-import { ThemeControl } from "@/components/ThemeControl";
 
 export const metadata: Metadata = {
   title: "همگام | داشبورد فروشنده",
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fa" dir="rtl">
-      <body><ThemeControl />{children}</body>
+      <body><a className="skip-link" href="#main-content">رفتن به محتوای اصلی</a>{children}</body>
     </html>
   );
 }

@@ -14,7 +14,7 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export function SalesReport({ report }: SalesReportProps) {
-  if (report.byChannel.length === 0 && report.byStatus.length === 0) return null;
+  const isEmpty = report.byChannel.length === 0 && report.byStatus.length === 0;
 
   return (
     <section className="sales-report" id="reports" aria-label="گزارش فروش">
@@ -24,7 +24,7 @@ export function SalesReport({ report }: SalesReportProps) {
           <h2>خلاصهٔ فروش</h2>
         </div>
       </div>
-      <div className="report-grid">
+      {isEmpty ? <p className="panel-empty">هنوز گزارشی از فروش برای نمایش وجود ندارد.</p> : <div className="report-grid">
         <div>
           <h3>فروش به تفکیک کانال</h3>
           <ul className="report-list">
@@ -49,7 +49,7 @@ export function SalesReport({ report }: SalesReportProps) {
             ))}
           </ul>
         </div>
-      </div>
+      </div>}
     </section>
   );
 }

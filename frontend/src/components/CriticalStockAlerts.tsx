@@ -5,8 +5,6 @@ interface CriticalStockAlertsProps {
 }
 
 export function CriticalStockAlerts({ items }: CriticalStockAlertsProps) {
-  if (items.length === 0) return null;
-
   return (
     <section className="critical-stock" id="inventory" aria-label="هشدار موجودی بحرانی">
       <div className="section-heading">
@@ -16,6 +14,7 @@ export function CriticalStockAlerts({ items }: CriticalStockAlertsProps) {
         </div>
         <span className="error-count">{items.length.toLocaleString("fa-IR")} کالا</span>
       </div>
+      {items.length === 0 && <p className="panel-empty">کالایی با موجودی بحرانی برای نمایش وجود ندارد.</p>}
       <ul className="critical-stock-list">
         {items.map((item) => (
           <li key={item.skuId}>
