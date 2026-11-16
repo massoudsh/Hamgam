@@ -33,6 +33,34 @@ npm run dev         # http://localhost:3000 — بدون بک‌اند هم در
 
 برای اتصال فرانت‌اند به بک‌اند واقعی: `NEXT_PUBLIC_API_URL=http://localhost:4000 npm run dev`
 
+## اجرای کامل با Docker (هر سه سرویس)
+
+`docker-compose.yml` سه سرویس را با هم بالا می‌آورد: `db` (PostgreSQL 16)، `backend` (API روی پورت ۴۰۰۰) و `frontend` (داشبورد روی پورت ۳۰۰۰). migrationها هنگام روشن‌شدن بک‌اند اجرا می‌شوند و idempotent هستند (`IF NOT EXISTS`).
+
+```bash
+cp .env.docker.example .env      # رمز دیتابیس و پورت‌ها را در .env تنظیم کن
+docker compose up -d --build     # ساخت ایمیج‌ها و اجرای همه سرویس‌ها
+docker compose ps                # وضعیت و سلامت سرویس‌ها
+docker compose logs -f backend   # لاگ API
+```
+
+پس از آماده‌شدن: داشبورد `http://localhost:3000`، API `http://localhost:4000/health` و دیتابیس `localhost:5432`.
+
+دستورهای روزمره:
+
+```bash
+docker compose stop              # توقف بدون حذف داده
+docker compose up -d             # اجرای دوباره
+docker compose down              # حذف کانتینرها (داده در volume می‌ماند)
+docker compose down -v           # حذف کانتینرها و دادهٔ دیتابیس
+docker compose up -d --build backend   # بازسازی فقط یک سرویس
+```
+
+نکته‌های استقرار:
+- `NEXT_PUBLIC_API_URL` هنگام **ساخت ایمیج** فرانت‌اند داخل bundle قرار می‌گیرد؛ برای دامنهٔ واقعی مقدار آن را در `.env` بگذار و فرانت‌اند را دوباره build کن. آدرسی که می‌گذاری باید از **مرورگر کاربر** قابل دسترسی باشد، نه فقط داخل شبکهٔ Docker.
+- `CORS_ORIGIN` دامنه‌های مجاز مرورگر را کنترل می‌کند (با کاما جدا شود، یا `*`). برای دامنهٔ واقعی باید همان origin داشبورد باشد.
+- بک‌اند و فرانت‌اند با کاربر غیر root (`node`) اجرا می‌شوند و هر دو healthcheck دارند؛ فرانت‌اند تا سالم‌شدن بک‌اند و بک‌اند تا آماده‌شدن دیتابیس صبر می‌کند.
+
 ## تست
 
 ```bash

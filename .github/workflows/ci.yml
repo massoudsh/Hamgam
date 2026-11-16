@@ -45,3 +45,15 @@ jobs:
       - run: npm test
       - run: npm run typecheck
       - run: npm run build
+
+  docker:
+    name: Docker images and compose
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate compose file
+        run: docker compose -f docker-compose.yml config
+      - name: Build backend image
+        run: docker build -t hamgam-backend:ci ./backend
+      - name: Build frontend image
+        run: docker build -t hamgam-frontend:ci ./frontend

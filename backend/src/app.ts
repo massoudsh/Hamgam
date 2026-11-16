@@ -8,9 +8,12 @@ import { connectorsRouter } from "./routes/connectors.js";
 import { matchingRouter } from "./routes/matching.js";
 import { syncRouter } from "./routes/sync.js";
 import { returnsRouter } from "./routes/returns.js";
+import { createCorsMiddleware } from "./middleware/cors.js";
 
 export function createApp(db: QueryExecutor): Express {
   const app = express();
+  const allowedOrigins = process.env.CORS_ORIGIN ?? "http://localhost:3000";
+  app.use(createCorsMiddleware(allowedOrigins));
   app.use(express.json());
 
   app.use(healthRouter());
