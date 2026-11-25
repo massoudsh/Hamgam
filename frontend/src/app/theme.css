@@ -127,7 +127,7 @@ button, input, select, textarea { font-family: inherit; }
 .workspace-intro h2 { font-size: clamp(1.3rem, 2vw, 1.65rem); font-weight: 750; }
 .workspace-intro > p { margin: 0; font-size: .78rem; color: var(--color-muted); }
 .kpi-cards { gap: 20px; margin-bottom: 28px; }
-.kpi-card, .order-hub, .return-history, .return-registration, .channel-connections, .sales-report, .critical-stock, .sync-errors, .glass-surface {
+.kpi-card, .operations, .order-hub, .return-history, .return-registration, .channel-connections, .sales-report, .critical-stock, .sync-errors, .glass-surface {
   background: var(--glass-medium); border: 1px solid var(--color-border);
   border-radius: var(--radius); box-shadow: var(--glass-shadow);
 }
@@ -177,7 +177,7 @@ input, select, textarea { min-width: 0; }
 .skip-link { position: fixed; top: 12px; inset-inline-start: 12px; z-index: 30; padding: 10px 20px; border-radius: 12px; background: var(--color-surface); color: var(--color-text); transform: translateY(-160%); }
 .skip-link:focus { transform: translateY(0); }
 @supports (backdrop-filter: blur(1px)) and (background: color-mix(in srgb, white 50%, transparent)) {
-  .topbar, .kpi-card, .order-hub, .dashboard-panels > section, .glass-surface {
+  .topbar, .kpi-card, .operations, .order-hub, .dashboard-panels > section, .glass-surface {
     background: color-mix(in srgb, var(--glass-medium) var(--glass-tint), transparent);
     backdrop-filter: blur(var(--glass-blur));
   }
@@ -229,7 +229,70 @@ input, select, textarea { min-width: 0; }
   *, *::before, *::after { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
 }
 @media (prefers-reduced-transparency: reduce), (forced-colors: active) {
-  .topbar, .kpi-card, .order-hub, .dashboard-panels > section, .glass-surface { backdrop-filter: none; background: var(--glass-medium); }
+  .topbar, .kpi-card, .operations, .order-hub, .dashboard-panels > section, .glass-surface { backdrop-filter: none; background: var(--glass-medium); }
   .glass-surface[data-variant="subtle"] { background: var(--glass-subtle); }
   .glass-surface[data-variant="elevated"], .topbar { background: var(--glass-elevated); }
+}
+
+/* ---- Operations workspace (replenishment, channel health, fulfillment, insights) ---- */
+.operations { margin-top: 26px; padding: 26px; }
+.ops-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: 20px 0 18px; padding: 6px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--glass-subtle); }
+.ops-tab { display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 16px; border: 1px solid transparent; border-radius: 11px; background: transparent; color: var(--color-muted); font-size: .82rem; font-weight: 600; }
+.ops-tab:hover { color: var(--color-text); background: var(--color-surface); }
+.ops-tab-active { background: var(--color-surface); border-color: var(--color-border); color: var(--color-text); box-shadow: var(--glass-shadow); }
+.ops-tab-badge { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 999px; background: var(--color-primary-soft); color: var(--color-primary); font-size: .7rem; }
+.ops-tabpanel:focus-visible { outline: 3px solid var(--focus-ring); outline-offset: 4px; }
+.ops-intro { margin: 0 0 16px; color: var(--color-muted); font-size: .78rem; }
+.ops-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.ops-stats > div { display: grid; gap: 4px; padding: 14px 16px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--glass-subtle); }
+.ops-stats span { color: var(--color-muted); font-size: .72rem; }
+.ops-stats strong { font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.ops-stat-ok strong { color: var(--color-success); }
+.ops-stat-warn strong { color: var(--color-warning); }
+.ops-stat-bad strong { color: var(--color-danger); }
+.ops-table-wrap { overflow-x: auto; border: 1px solid var(--color-border); border-radius: 16px; }
+.ops-table { width: 100%; border-collapse: collapse; }
+.ops-table th { padding: 12px 14px; background: var(--glass-subtle); color: var(--color-muted); font-size: .73rem; font-weight: 700; text-align: right; white-space: nowrap; }
+.ops-table td { padding: 13px 14px; border-top: 1px solid var(--color-border); font-size: .8rem; text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.ops-table td strong { display: block; font-weight: 650; }
+.ops-table td small { display: block; margin-top: 2px; color: var(--color-muted); font-size: .68rem; }
+.ops-danger { color: var(--color-danger); font-weight: 700; }
+.ops-chip { display: inline-block; padding: 3px 9px; border-radius: 999px; background: var(--color-surface-subtle); color: var(--color-muted); font-size: .7rem; font-weight: 650; white-space: normal; }
+.ops-chip-error, .ops-chip-fast { background: var(--color-danger-soft); color: var(--color-danger); }
+.ops-chip-warning, .ops-chip-slow { background: var(--color-warning-soft); color: var(--color-warning); }
+.ops-chip-ok, .ops-chip-healthy { background: var(--color-success-soft); color: var(--color-success); }
+.ops-chip-dead, .ops-chip-idle { background: var(--color-primary-soft); color: var(--color-primary); }
+.ops-form { display: grid; grid-template-columns: 2fr 1fr 1.4fr auto; align-items: end; gap: 12px; margin: 20px 0 26px; padding: 16px; border: 1px solid var(--color-border); border-radius: 16px; background: var(--glass-subtle); }
+.ops-form label { display: grid; gap: 6px; color: var(--color-muted); font-size: .73rem; font-weight: 600; }
+.ops-form input, .ops-form select { min-height: 44px; border: 1px solid var(--color-border); border-radius: 10px; padding: 0 12px; background: var(--color-surface); color: var(--color-text); font-size: 16px; }
+.ops-form button { min-height: 44px; border: 0; border-radius: 10px; padding: 0 18px; background: var(--color-text); color: var(--color-bg); font-weight: 700; font-size: .78rem; }
+.ops-form button:disabled { opacity: .5; cursor: not-allowed; }
+.ops-subheading { margin: 0 0 12px; font-size: .95rem; }
+.ops-order-list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.ops-order-list > li { padding: 14px 16px; border: 1px solid var(--color-border); border-radius: 14px; background: var(--glass-subtle); }
+.ops-order-head { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.ops-order-head time { margin-inline-start: auto; color: var(--color-muted); font-size: .7rem; }
+.ops-muted { margin: 4px 0 0; color: var(--color-muted); font-size: .72rem; }
+.ops-order-items { display: grid; gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+.ops-order-items > li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-top: 8px; border-top: 1px solid var(--color-border); font-size: .78rem; }
+.ops-receive { display: inline-flex; gap: 8px; }
+.ops-receive input { width: 92px; min-height: 38px; border: 1px solid var(--color-border); border-radius: 9px; padding: 0 10px; background: var(--color-surface); color: var(--color-text); font-size: 16px; }
+.ops-receive button, .ops-actions button { min-height: 38px; border: 0; border-radius: 9px; padding: 0 14px; background: var(--color-primary); color: #fff; font-size: .75rem; font-weight: 650; }
+.ops-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+.ops-actions input { min-height: 38px; width: min(220px, 100%); border: 1px solid var(--color-border); border-radius: 9px; padding: 0 10px; background: var(--color-surface); color: var(--color-text); font-size: 16px; }
+.ops-actions .ops-secondary { background: transparent; border: 1px solid var(--color-border); color: var(--color-danger); }
+.ops-actions button:disabled, .ops-receive button:disabled { opacity: .5; cursor: not-allowed; }
+.ops-status-partially_received { background: var(--color-warning-soft); color: var(--color-warning); }
+.ops-status-received { background: var(--color-success-soft); color: var(--color-success); }
+.ops-status-cancelled { background: var(--color-danger-soft); color: var(--color-danger); }
+@media (max-width: 900px) {
+  .ops-form { grid-template-columns: 1fr 1fr; }
+  .ops-form button { grid-column: 1 / -1; }
+}
+@media (max-width: 640px) {
+  .operations { padding: 20px 16px; border-radius: 18px; }
+  .ops-tabs { padding: 4px; }
+  .ops-tab { min-height: 38px; padding: 0 12px; font-size: .75rem; }
+  .ops-form { grid-template-columns: 1fr; }
+  .ops-stats { grid-template-columns: 1fr 1fr; }
 }

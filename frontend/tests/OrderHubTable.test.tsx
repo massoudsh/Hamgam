@@ -12,7 +12,10 @@ const rows: OrderHubRow[] = [
     channelDisplayName: "باسلام",
     customerName: "سارا",
     totalAmount: 10000,
-    placedAt: "2026-08-01T00:00:00Z"
+    placedAt: "2026-08-01T00:00:00Z",
+    trackingCode: null,
+    shippedAt: null,
+    deliveredAt: null
   }
 ];
 

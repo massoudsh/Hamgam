@@ -16,6 +16,9 @@ export interface OrderHubRow {
   customerName: string | null;
   totalAmount: number | null;
   placedAt: string;
+  trackingCode: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
 }
 
 export interface SalesReport {
@@ -83,3 +86,105 @@ export interface OrderHubFilters {
   from?: string;
   to?: string;
 }
+
+export interface ReplenishmentSuggestion {
+  skuId: string;
+  internalCode: string;
+  canonicalTitle: string;
+  quantityOnHand: number;
+  lowStockThreshold: number;
+  unitsSold: number;
+  onOrder: number;
+  avgDailySales: number;
+  daysOfCover: number | null;
+  suggestedQty: number;
+}
+
+export interface PurchaseOrderItem {
+  id: string;
+  skuId: string;
+  internalCode: string;
+  canonicalTitle: string;
+  quantityOrdered: number;
+  quantityReceived: number;
+  unitCost: number | null;
+}
+
+export interface PurchaseOrder {
+  id: string;
+  supplierName: string | null;
+  status: "ordered" | "partially_received" | "received" | "cancelled" | string;
+  expectedAt: string | null;
+  notes: string | null;
+  createdAt: string;
+  items: PurchaseOrderItem[];
+}
+
+export type ListingIssue =
+  | "unmatched"
+  | "stock_mismatch"
+  | "inactive_with_stock"
+  | "active_out_of_stock"
+  | "stale_sync";
+
+export interface ListingHealthRow {
+  channelListingId: string;
+  channelCode: string;
+  channelDisplayName: string;
+  externalProductId: string;
+  skuId: string | null;
+  internalCode: string | null;
+  canonicalTitle: string;
+  isActive: boolean;
+  channelStock: number | null;
+  channelPrice: number | null;
+  quantityOnHand: number | null;
+  lastSyncedAt: string | null;
+  issues: ListingIssue[];
+  severity: "error" | "warning" | "ok";
+}
+
+export interface ListingHealthSummary {
+  totalListings: number;
+  healthy: number;
+  withWarnings: number;
+  withErrors: number;
+  items: ListingHealthRow[];
+}
+
+export type VelocityStatus = "fast" | "healthy" | "slow" | "dead" | "idle";
+
+export interface VelocityRow {
+  skuId: string;
+  internalCode: string;
+  canonicalTitle: string;
+  quantityOnHand: number;
+  unitsSold: number;
+  revenue: number;
+  avgDailySales: number;
+  daysOfCover: number | null;
+  status: VelocityStatus;
+}
+
+export interface VelocityReport {
+  windowDays: number;
+  items: VelocityRow[];
+}
+
+export interface CustomerInsightRow {
+  name: string | null;
+  phone: string | null;
+  orderCount: number;
+  totalSpent: number;
+  lastOrderAt: string;
+  isRepeat: boolean;
+}
+
+export interface CustomerInsights {
+  totalCustomers: number;
+  repeatCustomers: number;
+  repeatRate: number;
+  topCustomers: CustomerInsightRow[];
+}
+
+export type FulfillmentStatus = "processing" | "shipped" | "delivered" | "cancelled";

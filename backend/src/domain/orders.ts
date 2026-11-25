@@ -1,5 +1,6 @@
 import type { QueryExecutor } from "../db/pool.js";
 import { adjustInventory, InsufficientStockError } from "./inventory.js";
+import { ConflictError, NotFoundError } from "../errors.js";
 
 export interface NormalizedOrderItem {
   skuId: string;
@@ -125,6 +126,9 @@ export interface OrderHubRow {
   customerName: string | null;
   totalAmount: number | null;
   placedAt: Date;
+  trackingCode: string | null;
+  shippedAt: Date | null;
+  deliveredAt: Date | null;
 }
 
 export interface ReturnableOrderItem {
@@ -183,7 +187,8 @@ export async function listOrderHub(db: QueryExecutor, filters: OrderHubFilters):
 
   const result = await db.query(
     `SELECT o.id, o.external_order_id, o.status, c.code AS channel_code, c.display_name AS channel_display_name,
-            o.customer_name, o.total_amount, o.placed_at
+            o.customer_name, o.total_amount, o.placed_at,
+            o.tracking_code, o.shipped_at, o.delivered_at
      FROM "order" o
      JOIN channel_connection cc ON cc.id = o.channel_connection_id
      JOIN channel c ON c.id = cc.channel_id
@@ -201,6 +206,103 @@ export async function listOrderHub(db: QueryExecutor, filters: OrderHubFilters):
     channelDisplayName: row.channel_display_name,
     customerName: row.customer_name,
     totalAmount: row.total_amount === null ? null : Number(row.total_amount),
-    placedAt: row.placed_at
+    placedAt: row.placed_at,
+    trackingCode: row.tracking_code ?? null,
+    shippedAt: row.shipped_at ?? null,
+    deliveredAt: row.delivered_at ?? null
   }));
+}
+
+export type FulfillmentStatus = "processing" | "shipped" | "delivered" | "cancelled";
+
+/** Allowed order transitions. Returns are handled by the returns engine, not here. */
+const TRANSITIONS: Record<string, FulfillmentStatus[]> = {
+  new: ["processing", "cancelled"],
+  processing: ["shipped", "cancelled"],
+  shipped: ["delivered"],
+  delivered: [],
+  cancelled: [],
+  returned: []
+};
+
+export interface UpdateOrderStatusInput {
+  sellerId: string;
+  orderId: string;
+  status: FulfillmentStatus;
+  trackingCode?: string;
+}
+
+export interface UpdatedOrder {
+  id: string;
+  status: string;
+  trackingCode: string | null;
+  shippedAt: Date | null;
+  deliveredAt: Date | null;
+}
+
+/**
+ * Fulfillment workflow: moves an order through new → processing → shipped →
+ * delivered (or cancels it before shipping). Shipping records the tracking code
+ * and timestamp; cancelling restocks only the units that were actually deducted
+ * at order creation (read back from the ledger, so orders that were recorded
+ * without enough stock never get phantom stock added).
+ */
+export async function updateOrderStatus(
+  db: QueryExecutor,
+  input: UpdateOrderStatusInput
+): Promise<UpdatedOrder> {
+  const current = await db.query(
+    `SELECT id, status FROM "order" WHERE id = $1 AND seller_id = $2`,
+    [input.orderId, input.sellerId]
+  );
+  if (current.rowCount === 0) throw new NotFoundError("order_not_found");
+
+  const fromStatus = current.rows[0].status as string;
+  const allowed = TRANSITIONS[fromStatus] ?? [];
+  if (!allowed.includes(input.status)) {
+    throw new ConflictError(`invalid_transition_${fromStatus}_to_${input.status}`);
+  }
+
+  const trackingCode = input.trackingCode?.trim() || null;
+  const updated = await db.query(
+    `UPDATE "order"
+     SET status = $1,
+         tracking_code = COALESCE($2, tracking_code),
+         shipped_at = CASE WHEN $1 = 'shipped' THEN now() ELSE shipped_at END,
+         delivered_at = CASE WHEN $1 = 'delivered' THEN now() ELSE delivered_at END,
+         updated_at = now()
+     WHERE id = $3
+     RETURNING id, status, tracking_code, shipped_at, delivered_at`,
+    [input.status, trackingCode, input.orderId]
+  );
+
+  if (input.status === "cancelled") {
+    const deducted = await db.query(
+      `SELECT sku_id, SUM(change_qty) AS net_change
+       FROM inventory_ledger
+       WHERE reference_id = $1 AND reason = 'order'
+       GROUP BY sku_id`,
+      [input.orderId]
+    );
+    for (const row of deducted.rows) {
+      const quantity = -Number(row.net_change);
+      if (quantity <= 0) continue;
+      await adjustInventory(db, {
+        skuId: row.sku_id,
+        changeQty: quantity,
+        reason: "cancellation",
+        eventId: `cancel:${input.orderId}:${row.sku_id}`,
+        referenceId: input.orderId
+      });
+    }
+  }
+
+  const row = updated.rows[0];
+  return {
+    id: row.id,
+    status: row.status,
+    trackingCode: row.tracking_code,
+    shippedAt: row.shipped_at,
+    deliveredAt: row.delivered_at
+  };
 }

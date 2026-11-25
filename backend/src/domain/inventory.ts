@@ -16,7 +16,13 @@ export class ConcurrencyConflictError extends Error {
   }
 }
 
-export type InventoryReason = "order" | "return" | "manual_adjustment" | "reconciliation";
+export type InventoryReason =
+  | "order"
+  | "return"
+  | "manual_adjustment"
+  | "reconciliation"
+  | "purchase_receipt"
+  | "cancellation";
 
 export interface AdjustInventoryInput {
   skuId: string;

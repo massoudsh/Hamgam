@@ -1,7 +1,13 @@
 import { Router } from "express";
 import { z } from "zod";
 import type { QueryExecutor } from "../db/pool.js";
-import { listOrderHub, listReturnableOrderItems } from "../domain/orders.js";
+import { listOrderHub, listReturnableOrderItems, updateOrderStatus } from "../domain/orders.js";
+
+const statusSchema = z.object({
+  sellerId: z.string().uuid(),
+  status: z.enum(["processing", "shipped", "delivered", "cancelled"]),
+  trackingCode: z.string().max(120).optional()
+});
 
 const filterSchema = z.object({
   sellerId: z.string().uuid(),
@@ -34,11 +40,26 @@ export function ordersRouter(db: QueryExecutor): Router {
     }
   });
 
-  router.get("/orders/:orderId/returnable-items", async (req, res, next) => {
-    try {
+  router.get("/orders/:orderId/returnable-items", async (req, res, next) => {    try {
       const { sellerId } = z.object({ sellerId: z.string().uuid() }).parse(req.query);
       const { orderId } = z.object({ orderId: z.string().uuid() }).parse(req.params);
       res.json({ items: await listReturnableOrderItems(db, sellerId, orderId) });
+    } catch (err) {
+      next(err);
+    }
+  });
+
+  router.patch("/orders/:orderId/status", async (req, res, next) => {
+    try {
+      const parsed = statusSchema.parse(req.body);
+      const { orderId } = z.object({ orderId: z.string().uuid() }).parse(req.params);
+      const updated = await updateOrderStatus(db, {
+        sellerId: parsed.sellerId,
+        orderId,
+        status: parsed.status,
+        trackingCode: parsed.trackingCode
+      });
+      res.json(updated);
     } catch (err) {
       next(err);
     }

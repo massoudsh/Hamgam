@@ -1,5 +1,21 @@
-import type { ChannelConnection, CriticalStockItem, DashboardKpis, OrderHubFilters, OrderHubRow, ReturnableOrderItem, ReturnRequest, SalesReport, SyncConnectionError } from "./types";
-import { demoKpis, demoOrders } from "./demoData";
+import type {
+  ChannelConnection,
+  CriticalStockItem,
+  CustomerInsights,
+  DashboardKpis,
+  FulfillmentStatus,
+  ListingHealthSummary,
+  OrderHubFilters,
+  OrderHubRow,
+  PurchaseOrder,
+  ReplenishmentSuggestion,
+  ReturnableOrderItem,
+  ReturnRequest,
+  SalesReport,
+  SyncConnectionError,
+  VelocityReport
+} from "./types";
+import { demoKpis, demoOrders, demoReplenishment } from "./demoData";
 
 export class ApiClientError extends Error {}
 
@@ -141,6 +157,115 @@ export class ApiClient {
     } catch {
       return { data: filterDemoOrders(filters), demo: true };
     }
+  }
+
+  async getReplenishmentSuggestions(): Promise<{ data: ReplenishmentSuggestion[]; demo: boolean }> {
+    if (!this.baseUrl) return { data: demoReplenishment, demo: true };
+    try {
+      const res = await this.fetchImpl(`${this.baseUrl}/api/purchasing/suggestions?sellerId=${this.sellerId}`);
+      if (!res.ok) throw new ApiClientError(`replenishment_http_${res.status}`);
+      const body = (await res.json()) as { items: ReplenishmentSuggestion[] };
+      return { data: body.items, demo: false };
+    } catch {
+      return { data: demoReplenishment, demo: true };
+    }
+  }
+
+  async getPurchaseOrders(): Promise<{ data: PurchaseOrder[]; demo: boolean }> {
+    if (!this.baseUrl) return { data: [], demo: true };
+    try {
+      const res = await this.fetchImpl(`${this.baseUrl}/api/purchasing/orders?sellerId=${this.sellerId}`);
+      if (!res.ok) throw new ApiClientError(`purchase_orders_http_${res.status}`);
+      const body = (await res.json()) as { items: PurchaseOrder[] };
+      return { data: body.items, demo: false };
+    } catch {
+      return { data: [], demo: true };
+    }
+  }
+
+  async createPurchaseOrder(input: {
+    supplierName?: string;
+    items: Array<{ skuId: string; quantity: number; unitCost?: number }>;
+  }): Promise<PurchaseOrder> {
+    if (!this.baseUrl) throw new ApiClientError("purchasing_unavailable_in_demo");
+    const res = await this.fetchImpl(`${this.baseUrl}/api/purchasing/orders`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ sellerId: this.sellerId, ...input })
+    });
+    if (!res.ok) throw new ApiClientError(`create_purchase_order_http_${res.status}`);
+    return (await res.json()) as PurchaseOrder;
+  }
+
+  async receivePurchaseOrderItem(purchaseOrderId: string, itemId: string, quantity: number) {
+    if (!this.baseUrl) throw new ApiClientError("purchasing_unavailable_in_demo");
+    const res = await this.fetchImpl(
+      `${this.baseUrl}/api/purchasing/orders/${purchaseOrderId}/items/${itemId}/receive`,
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ sellerId: this.sellerId, quantity })
+      }
+    );
+    if (!res.ok) throw new ApiClientError(`receive_purchase_order_http_${res.status}`);
+    return (await res.json()) as { quantityReceived: number; status: string };
+  }
+
+  async getListingHealth(): Promise<{ data: ListingHealthSummary; demo: boolean }> {
+    const empty: ListingHealthSummary = {
+      totalListings: 0,
+      healthy: 0,
+      withWarnings: 0,
+      withErrors: 0,
+      items: []
+    };
+    if (!this.baseUrl) return { data: empty, demo: true };
+    try {
+      const res = await this.fetchImpl(`${this.baseUrl}/api/listing-health?sellerId=${this.sellerId}`);
+      if (!res.ok) throw new ApiClientError(`listing_health_http_${res.status}`);
+      return { data: (await res.json()) as ListingHealthSummary, demo: false };
+    } catch {
+      return { data: empty, demo: true };
+    }
+  }
+
+  async getVelocityReport(): Promise<{ data: VelocityReport; demo: boolean }> {
+    const empty: VelocityReport = { windowDays: 30, items: [] };
+    if (!this.baseUrl) return { data: empty, demo: true };
+    try {
+      const res = await this.fetchImpl(`${this.baseUrl}/api/analytics/velocity?sellerId=${this.sellerId}`);
+      if (!res.ok) throw new ApiClientError(`velocity_http_${res.status}`);
+      return { data: (await res.json()) as VelocityReport, demo: false };
+    } catch {
+      return { data: empty, demo: true };
+    }
+  }
+
+  async getCustomerInsights(): Promise<{ data: CustomerInsights; demo: boolean }> {
+    const empty: CustomerInsights = { totalCustomers: 0, repeatCustomers: 0, repeatRate: 0, topCustomers: [] };
+    if (!this.baseUrl) return { data: empty, demo: true };
+    try {
+      const res = await this.fetchImpl(`${this.baseUrl}/api/analytics/customers?sellerId=${this.sellerId}`);
+      if (!res.ok) throw new ApiClientError(`customers_http_${res.status}`);
+      return { data: (await res.json()) as CustomerInsights, demo: false };
+    } catch {
+      return { data: empty, demo: true };
+    }
+  }
+
+  async updateOrderStatus(
+    orderId: string,
+    status: FulfillmentStatus,
+    trackingCode?: string
+  ): Promise<{ status: string; trackingCode: string | null }> {
+    if (!this.baseUrl) throw new ApiClientError("fulfillment_unavailable_in_demo");
+    const res = await this.fetchImpl(`${this.baseUrl}/api/orders/${orderId}/status`, {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ sellerId: this.sellerId, status, trackingCode })
+    });
+    if (!res.ok) throw new ApiClientError(`update_order_status_http_${res.status}`);
+    return (await res.json()) as { status: string; trackingCode: string | null };
   }
 }
 

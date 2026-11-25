@@ -13,6 +13,7 @@ import { SyncConnectionErrors } from "./SyncConnectionErrors";
 import { KpiCards } from "./KpiCards";
 import { OrderHubFilters } from "./OrderHubFilters";
 import { OrderHubTable } from "./OrderHubTable";
+import { OperationsWorkspace } from "./OperationsWorkspace";
 
 const DEMO_SELLER_ID = "00000000-0000-0000-0000-000000000000";
 
@@ -127,7 +128,8 @@ export function Dashboard() {
           <a className="nav-item" href="#orders"><span className="nav-index" aria-hidden="true">۰۲</span>سفارش‌ها <span className="nav-count">{orders.length.toLocaleString("fa-IR")}</span></a>
           <a className="nav-item" href="#inventory"><span className="nav-index" aria-hidden="true">۰۳</span>موجودی</a>
           <a className="nav-item" href="#channels"><span className="nav-index" aria-hidden="true">۰۴</span>کانال‌های فروش</a>
-          <a className="nav-item" href="#reports"><span className="nav-index" aria-hidden="true">۰۵</span>گزارش‌ها</a>
+          <a className="nav-item" href="#operations"><span className="nav-index" aria-hidden="true">۰۵</span>عملیات</a>
+          <a className="nav-item" href="#reports"><span className="nav-index" aria-hidden="true">۰۶</span>گزارش‌ها</a>
         </nav>
         <div className="sidebar-footer">
           <div className="avatar">ف</div>
@@ -167,6 +169,15 @@ export function Dashboard() {
             <OrderHubFilters value={filters} onChange={setFilters} />
             {loading ? <div className="table-loading" role="status">در حال دریافت سفارش‌ها…</div> : <OrderHubTable orders={orders} />}
           </section>
+          <OperationsWorkspace
+            client={client}
+            orders={orders}
+            isDemo={isDemo}
+            onOrdersChanged={() => {
+              client.getOrderHub(filters).then(({ data }) => setOrders(data));
+              client.getCriticalStock().then(({ data }) => setCriticalStock(data));
+            }}
+          />
           <div className="dashboard-panels">
             <CriticalStockAlerts items={criticalStock} />
             <ChannelConnections connections={connections} />
